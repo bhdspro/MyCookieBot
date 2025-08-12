@@ -4,15 +4,22 @@ import cors from "cors";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Permite requisições cross-origin
+app.use(express.json()); // Para interpretar JSON no corpo da requisição
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
+if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) {
+  console.error("⚠️ Variáveis de ambiente TELEGRAM_TOKEN ou TELEGRAM_CHAT_ID não definidas!");
+  process.exit(1);
+}
+
 app.post("/send", async (req, res) => {
-  if (!req.body.text) {
-    return res.status(400).json({ error: "Campo 'text' é obrigatório" });
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: "Campo 'text' é obrigatório." });
   }
 
   try {
@@ -21,8 +28,8 @@ app.post("/send", async (req, res) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text: req.body.text
-      })
+        text,
+      }),
     });
 
     const data = await response.json();
@@ -31,8 +38,9 @@ app.post("/send", async (req, res) => {
       return res.status(500).json({ error: data.description });
     }
 
-    return res.json(data);
+    return res.json({ success: true, result: data.result });
   } catch (error) {
+    console.error("Erro ao enviar mensagem:", error);
     return res.status(500).json({ error: error.message });
   }
 });
