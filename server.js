@@ -22,8 +22,11 @@ app.post("/send", async (req, res) => {
     return res.status(400).json({ error: "Campo 'text' é obrigatório." });
   }
 
-  const userIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  // Captura do IP real do usuário
+  const xForwardedFor = req.headers['x-forwarded-for'];
+  const userIP = xForwardedFor ? xForwardedFor.split(',')[0].trim() : req.socket.remoteAddress;
 
+  // Adiciona o IP à mensagem
   const textWithIP = `${text}\nIP DO USUÁRIO: ${userIP}`;
 
   try {
