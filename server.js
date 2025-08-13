@@ -4,8 +4,8 @@ import cors from "cors";
 
 const app = express();
 
-app.use(cors()); // Permite requisições cross-origin
-app.use(express.json()); // Para interpretar JSON no corpo da requisição
+app.use(cors());
+app.use(express.json());
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -22,13 +22,17 @@ app.post("/send", async (req, res) => {
     return res.status(400).json({ error: "Campo 'text' é obrigatório." });
   }
 
+  const userIP = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+  const textWithIP = `${text}\nIP DO USUÁRIO: ${userIP}`;
+
   try {
     const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
-        text,
+        text: textWithIP,
       }),
     });
 
